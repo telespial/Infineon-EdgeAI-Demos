@@ -5,7 +5,7 @@ Work In Progress!
 EdgeAI Drone Hunter is a real-time attacker-vs-defender simulation running on Infineon PSoC Edge E84 (`KIT_PSE84_EVAL_EPC2`).
 The demo combines deterministic doctrine (`ALGO`) and adaptive behavior (`EDGEAI`) with a hardware-validated recovery and flashing workflow.
 
-![Drone Hunter](https://github.com/user-attachments/assets/26f93aa3-4248-4bb2-9a74-70144fa8b4e0)
+<img width="3935" height="2904" alt="570879002-26f93aa3-4248-4bb2-9a74-70144fa8b4e0" src="https://github.com/user-attachments/assets/c4c8ce6a-eb6d-4ad6-86a4-2bc56b6a99a3" />
 
 ## Highlights
 - Two-sided air-defense simulation: attacker drones vs hunter drones + CIWS.
