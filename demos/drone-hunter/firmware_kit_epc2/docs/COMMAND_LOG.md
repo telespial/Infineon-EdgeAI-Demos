@@ -1,0 +1,877 @@
+# COMMAND_LOG
+
+- 2026-04-01 | Freeze hardening pass (audio/runtime race + tracer):
+  - `drone_hunter_audio_hal.c`:
+    - bounded `dh_audio_fill_tx_fifo()` loop with write cap + no-progress break,
+    - removed heartbeat-side FIFO refill to keep mixer mutation ISR-driven,
+    - made queue push IRQ-safe (`PRIMASK` lock/unlock),
+    - routed looped city-event start/stop through queue/sample path (single audio context).
+  - `drone_hunter_arena.c`:
+    - added always-visible top arena `DBG:*` tracer label for freeze-stage capture.
+  - `wrap_angle()` cleanup retained from freeze pass: removed unbounded while normalization.
+- 2026-04-01 | Build/artifact refresh:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` (`no work to do`),
+  - regenerated `proj_cm55.hex` + `proj_cm55.bin` from current ELF via `arm-none-eabi-objcopy`.
+- 2026-04-01 | Flash attempt status:
+  - direct flashing retried but blocked by probe detection:
+    - `Error: unable to find a matching CMSIS-DAP device`.
+- 2026-04-01 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260401-phase15-freeze-audio-race-tracer-20260401_104044`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260401-phase15-freeze-audio-race-tracer-20260401_104044`,
+  - moved `current_golden` and `current_failsafe` symlinks to this baseline.
+
+- 2026-03-30 | Freeze investigation pass (strategy/launch transition focus):
+  - reviewed launch/strategy paths in `update_hunter()` and city-fire accumulation flow,
+  - added explicit launch-target bounds guard before commit/launch branch (`target` must be in `[0, KILLER_COUNT)`),
+  - hardened fire-state bounds:
+    - `city_fire_nearest_d2()` now clamps loop bound to `CITY_FIRE_MAX`,
+    - `anim_cb()` now clamps `city_fire_count` and `city_fire_head` every tick.
+  - intent: remove potential out-of-range/state-drift freeze vectors observed around strategy shifts and launch events.
+- 2026-03-30 | Flash verification signatures (latest):
+  - `wrote 32768 bytes` / `verified 30456 bytes`
+  - `wrote 12288 bytes` / `verified 8732 bytes`
+  - `wrote 3923968 bytes` / `verified 3920440 bytes`
+  - `** Resetting Target **`
+- 2026-03-30 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260330-phase15-freeze-strategy-launch-guard-20260330_151631`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260330-phase15-freeze-strategy-launch-guard-20260330_151631`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-30 | Targeting/engagement/stability hardening pass in `drone_hunter_arena.c`:
+  - fixed red fixed-wing visibility composition by mixing fixed-wing visuals in Russia-themed waves,
+  - added persistent hunter terminal engagement behavior:
+    - hunters now retry in kill window instead of immediate egress on first miss,
+    - forced kill after bounded terminal attempts (`H_TERMINAL_MAX_ATTEMPTS=3`),
+  - corrected lock-box placement:
+    - switched to rendered-object bounds and converted from screen-space to arena-local coordinates,
+    - resolved severe x-wing/small-drone box offset,
+  - relaxed long-range commit gating:
+    - distant uncovered threats now launch earlier instead of waiting for close/urgent thresholds,
+  - freeze-risk mitigation:
+    - enabled render stability safe mode for city-fire path,
+    - added per-tick hunter target-index sanitization guard before `update_hunter()`.
+- 2026-03-30 | Flash verification signatures (latest):
+  - `wrote 32768 bytes` / `verified 30456 bytes`
+  - `wrote 12288 bytes` / `verified 8732 bytes`
+  - `wrote 3923968 bytes` / `verified 3920440 bytes`
+  - `** Resetting Target **`
+- 2026-03-30 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260330-phase15-targeting-lockbox-freeze-stability-20260330_145332`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260330-phase15-targeting-lockbox-freeze-stability-20260330_145332`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-30 | Hunter icon + CIWS fire audio reliability fix:
+  - hardened deck icon stability in `update_hunter_deck_ui()` by force-clearing hidden flags and enforcing icon opacity per refresh tick,
+  - changed CIWS fire audio emit policy in `ciws_fire_at()`:
+    - emit CIWS fire sound on every real burst trigger,
+    - removed shared `0.20s` cooldown gate for CIWS fire event to prevent left/right gun suppression.
+- 2026-03-30 | Flash verification signatures (latest):
+  - `wrote 32768 bytes` / `verified 30456 bytes`
+  - `wrote 12288 bytes` / `verified 8732 bytes`
+  - `wrote 3923968 bytes` / `verified 3919672 bytes`
+  - `** Resetting Target **`
+- 2026-03-30 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260330-phase15-hunter-icon-ciws-audio-fix-20260330_135213`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260330-phase15-hunter-icon-ciws-audio-fix-20260330_135213`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-30 | Explosion duration/fade extension + city wobble fix:
+  - regenerated explosion embedded clips with longer playback and tail fade-out:
+    - `dh_clip_attack_success.inc` -> `3.0s`,
+    - `dh_clip_hunter_kill.inc` -> `3.0s`,
+    - `dh_clip_ciws_kill.inc` -> `1.5s`,
+  - active explosion mapping now uses both recordings:
+    - `freesound_community-explosion-42132.mp3`,
+    - `freesound_community-medium-explosion-40472.mp3`,
+  - corrected city ambience quality regression by rebalancing embedded asset sizes:
+    - city ambient clip restored to `131072` bytes (`4.096s`) from source recording,
+    - siren clips resized to preserve linker fit.
+- 2026-03-30 | Flash verification signatures (latest):
+  - `wrote 32768 bytes` / `verified 30456 bytes`
+  - `wrote 12288 bytes` / `verified 8732 bytes`
+  - `wrote 3923968 bytes` / `verified 3919672 bytes`
+  - `** Resetting Target **`
+- 2026-03-30 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260330-phase15-explosion2x-citywobble-fix-20260330_133456`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260330-phase15-explosion2x-citywobble-fix-20260330_133456`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-30 | City ambient max-fit loop policy + flash validation:
+  - converted city ambient source to linker-safe max-fit embedded clip size:
+    - `dh_clip_city_traffic.inc` -> `131072` bytes (`4.096s` at 16 kHz mono PCM),
+  - updated audio runtime city-loop behavior in `drone_hunter_audio_hal.c`:
+    - continuous city playback during gameplay,
+    - random segment window `40-55` seconds,
+    - forced crossfade return to clip start at segment boundary,
+  - full build + flash validation succeeded.
+- 2026-03-30 | Flash verification signatures (latest):
+  - `wrote 32768 bytes` / `verified 30456 bytes`
+  - `wrote 12288 bytes` / `verified 8732 bytes`
+  - `wrote 3932160 bytes` / `verified 3927688 bytes`
+  - `** Resetting Target **`
+- 2026-03-30 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260330-phase15-city-maxfit-rand40-55-crossfade-20260330_131722`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260330-phase15-city-maxfit-rand40-55-crossfade-20260330_131722`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-30 | Siren source-length rebuild + flash verification:
+  - rebuilt emergency siren assets from original MP3 sources:
+    - `dh_clip_siren_a.inc` -> 12 seconds (`384000` bytes),
+    - `dh_clip_siren_b.inc` -> 12 seconds (`384000` bytes),
+  - retained runtime behavior:
+    - random siren playback window (`3-6` seconds),
+    - fade-in/fade-out handling from audio voice envelope logic,
+  - regenerated top-level CM55 artifacts from latest ELF and ran full validated flash flow.
+- 2026-03-30 | Flash verification signatures (latest):
+  - `wrote 32768 bytes` / `verified 30456 bytes`
+  - `wrote 12288 bytes` / `verified 8732 bytes`
+  - `wrote 3850240 bytes` / `verified 3847704 bytes`
+  - `** Resetting Target **`
+- 2026-03-30 | Planning/docs refresh:
+  - added new priority TODO step for intermittent game freeze investigation/hardening baseline delivery.
+- 2026-03-30 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260330-phase15-audio-sirens12s-freeze-todo-20260330_123055`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260330-phase15-audio-sirens12s-freeze-todo-20260330_123055`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-30 | Audio mix refinement pass (fade + loudness + duration + persistent bed):
+  - regenerated selected embedded PCM clip blobs for longer duration:
+    - extended explosions (`attack_success`, `hunter_kill`, `ciws_kill`),
+    - significantly extended ambulance (`siren_b`),
+  - rewrote `drone_hunter_audio_hal.c` to use a small mixer with:
+    - fade-in/fade-out envelopes on all voices,
+    - always-on low background loops for city traffic + drone bed,
+    - queued foreground SFX playback,
+    - lower global output gain.
+  - reduced per-event gain values in `drone_hunter_arena.c` to prevent overly loud playback.
+- 2026-03-30 | Build validation for audio refinement:
+  - `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` (success).
+
+- 2026-03-30 | Roadmap update:
+  - added TODO item for subtle city liveliness lighting:
+    - tiny white/tungsten ground-level flickers,
+    - `1px` to `3px` square flicker size target,
+    - low-intensity randomized timing/placement.
+
+- 2026-03-30 | Full recovery flash after actual audio-out integration:
+  - regenerated CM55 artifacts from latest ELF:
+    - `proj_cm55.hex` and `proj_cm55.bin`
+  - executed validated full sequence:
+    - `bash /home/user/Documents/DroneHunter_Golden_2026-03-28/scripts/flash_golden.sh <repo>`
+  - OpenOCD signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 3137536 bytes` / `verified 3132872 bytes`
+    - `** Resetting Target **`
+
+- 2026-03-30 | Actual audio-out enablement (PCM clip playback):
+  - decoded project MP3 assets into short 16 kHz mono PCM clip blobs and embedded them under:
+    - `firmware_kit_epc2/proj_cm55/app/drone_hunter/audio_assets/generated/*.inc`
+  - added asset map layer:
+    - `firmware_kit_epc2/proj_cm55/app/drone_hunter/audio_assets/drone_hunter_audio_assets.h`
+    - `firmware_kit_epc2/proj_cm55/app/drone_hunter/audio_assets/drone_hunter_audio_assets.c`
+  - rewrote `drone_hunter_audio_hal.c` event path to queue and stream real PCM samples through TDM codec output,
+  - preserved arena event-driven scheduler (city/drone/emergency/kill events) while switching playback from synthetic tones to clip samples.
+- 2026-03-30 | Build validation for actual audio-out path:
+  - first link attempt failed (`m55_data_INTERNAL` overflow) due clip blobs in writable `.data`,
+  - fixed by converting generated blob symbols to `static const` so audio blobs reside in flash/rodata,
+  - rebuild command succeeded:
+    - `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v`.
+
+- 2026-03-30 | City + drone audio mapping pass in `drone_hunter_arena.c` + `drone_hunter_audio_hal.c`:
+  - fixed sound asset paths to actual repo folder casing (`sounds/city sounds/...`),
+  - added drone audio event classes for fixed-wing and FPV flyby cues,
+  - added timed drone sound scheduling from active attacker composition in `sound_tick()`,
+  - extended audio HAL event map with distinct drone tone patterns for immediate on-board playback.
+- 2026-03-30 | Build validation for city+drone audio pass:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - warnings observed: existing/known unused static helper functions in arena module.
+
+- 2026-03-30 | Priority backlog and planning docs update:
+  - updated `ToDo.md` with requested four-item fix backlog:
+    - audio overhaul replacing pong speaker test,
+    - `ALGO` strategy improvement on both sides,
+    - settings/help file addition,
+    - flame redraw placeholder task.
+  - added concrete execution plan section for item `#1` (audio mapping/timing/layering/escalation/validation).
+  - refreshed `docs/STATUS.md` and `docs/PROJECT_STATE.md` with new priorities and next execution focus.
+
+- 2026-03-29 | Fire animation + palette doctrine restoration in `drone_hunter_arena.c`:
+  - reverted forced flame-demo boot mode to restore normal game boot,
+  - re-enabled full animated city-fire renderer (`RENDER_STABILITY_SAFE_MODE=0`),
+  - centralized bright/dark flame profile mapping into canonical buckets used by runtime selection and demo paths,
+  - enforced weighted profile selection target: `75% bright` / `25% dark`.
+- 2026-03-29 | Build + flash validation for animated fire restoration:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` from rebuilt `proj_cm55.elf`,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2867200 bytes` / `verified 2863908 bytes`
+    - `** Resetting Target **`
+
+- 2026-03-29 | City-fire safe-mode visibility fix in `drone_hunter_arena.c`:
+  - corrected safe-mode fire path so impact fires are no longer force-hidden every frame,
+  - added persistent low-load ground fires tied to attacker successful target hits.
+- 2026-03-29 | Drone class visual mapping + update-effects freeze hardening:
+  - fixed attack-drone visual mapping so sprite/size/blast style are class-locked:
+    - Shahed = largest yellow + giant orange blast,
+    - fixed-wing red = medium + red blast,
+    - X-wing DJI = smallest orange + small white blast,
+  - hardened `DBG:UPDATE_EFFECTS` path by removing repeated debug foreground moves and reducing high-churn safe-mode fire object updates.
+- 2026-03-29 | Build + flash validation for effects hardening + class-size correction:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` from rebuilt `proj_cm55.elf`,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2633728 bytes` / `verified 2628796 bytes`
+    - `** Resetting Target **`
+- 2026-03-29 | Runtime note:
+  - current fire rendering is intentionally in still-image fallback mode for stability monitoring; next tuning pass can restore animated flames once freeze soak confirms stable runtime.
+
+- 2026-03-29 | Strategic attacker sequence + visible debug-stage instrumentation in `drone_hunter_arena.c`:
+  - replaced deterministic attacker composition tables with doctrine-weighted stochastic spawn selection,
+  - reset round at splash start after entropy mix to avoid boot-time replay patterns,
+  - moved/foregrounded top-center `DBG:*` banner to keep freeze-stage text visible during arena runtime.
+- 2026-03-29 | Build + flash validation for strategic+debug pass:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` from rebuilt `proj_cm55.elf`,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2523136 bytes` / `verified 2521124 bytes`
+    - `** Resetting Target **`
+- 2026-03-29 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260329-phase15-strategic-rng-debug-banner-20260329_091916`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260329-phase15-strategic-rng-debug-banner-20260329_091916`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-29 | Fire visibility + deck glass readability pass in `drone_hunter_arena.c`:
+  - restored city-fire rendering using low-load static sprite mode so impact fires are visible again,
+  - preserved freeze hardening by avoiding the heavy animated city-fire runtime path,
+  - increased bottom deck liquid-glass bar opacity by ~20%.
+- 2026-03-29 | Build + flash validation for fire-restore/deck-glass pass:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` and `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2859008 bytes` / `verified 2857092 bytes`
+    - `** Resetting Target **`
+- 2026-03-29 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260329-phase15-fire-restore-deck-glass-opa-20260329_074257`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260329-phase15-fire-restore-deck-glass-opa-20260329_074257`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-29 | Freeze failsafe stabilization pass in `drone_hunter_arena.c`:
+  - reduced ATTACK/DEFEND liquid-glass card widths again,
+  - disabled dynamic city-fire runtime rendering loop to remove known freeze vector during gameplay,
+  - kept core combat/explosion ring systems active.
+- 2026-03-29 | Build + flash validation for freeze failsafe baseline:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` and `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2523136 bytes` / `verified 2519124 bytes`
+    - `** Resetting Target **`
+- 2026-03-29 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260329-phase15-freeze-failsafe-cityfire-off-20260329_071703`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260329-phase15-freeze-failsafe-cityfire-off-20260329_071703`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-29 | Bright fire visibility + steering stabilization pass in `drone_hunter_arena.c`:
+  - added/enforced evenly-selected bright fire profiles for high visibility:
+    - bright orange, bright red, bright red/orange,
+  - increased bright profile tint/opacity to avoid dark/muted fireballs,
+  - set Stinger to plane steering model to remove in-flight wiggle.
+- 2026-03-29 | Build + flash validation for bright-fire pass:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` and `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2863104 bytes` / `verified 2858508 bytes`
+    - `** Resetting Target **`
+- 2026-03-29 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260329-phase15-bright-fire-visibility-pass-20260329_061947`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260329-phase15-bright-fire-visibility-pass-20260329_061947`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-29 | Runtime stabilization + naming normalization in `drone_hunter_arena.c`:
+  - Skyfall switched to plane steering model to remove hybrid wiggle behavior,
+  - hunter labels normalized to `Stinger`, `Pelican`, `TYTAN`,
+  - reduced city fire render cap (`CITY_FIRE_RENDER_MAX`) and added bounded fire-target growth guard,
+  - throttled flame sprite/style updates to reduce frame saturation risk.
+- 2026-03-29 | Build + flash validation for freeze hardening:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` and `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2859008 bytes` / `verified 2857900 bytes`
+    - `** Resetting Target **`
+- 2026-03-29 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260329-phase15-freeze-hardening-fire-throttle-20260329_060056`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260329-phase15-freeze-hardening-fire-throttle-20260329_060056`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-28 | Freeze hardening pass in `drone_hunter_arena.c`:
+  - replaced potentially unbounded angle-normalization loops with finite-safe `wrap_angle_pi()` usage,
+  - hardened `wrap_angle_pi()` with non-finite guards (`isfinite`) and `remainderf` normalization.
+- 2026-03-28 | Build + flash validation for freeze hardening:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` and `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2859008 bytes` / `verified 2857892 bytes`
+    - `** Resetting Target **`
+- 2026-03-28 | Restore-point governance update:
+  - promoted golden only: `golden-20260328-phase15-freeze-fix-angle-wrap-20260328_194537`,
+  - updated `current_golden` symlink to this baseline,
+  - kept failsafe unchanged at `failsafe-e8-drone-hunter-20260328-phase15-flame-variation-mixed-palette-20260328_191719`.
+
+- 2026-03-28 | Flame variation rebalance pass in `drone_hunter_arena.c`:
+  - restored vivid blue/green/purple families while preserving hot red/orange/white flame families,
+  - rebalanced profile picker to mixed hot/vivid/smoke distribution,
+  - increased per-fire style variation (size scaling, wobble amplitude, and motion-rate diversity).
+- 2026-03-28 | Build + flash validation for flame variation mix:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` and `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2859008 bytes` / `verified 2856604 bytes`
+    - `** Resetting Target **`
+- 2026-03-28 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260328-phase15-flame-variation-mixed-palette-20260328_191719`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260328-phase15-flame-variation-mixed-palette-20260328_191719`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-28 | Bottom icon/deck flicker mitigation hardening in `drone_hunter_arena.c`:
+  - kept deck UI state-change caching/throttled CIWS text refresh,
+  - removed per-frame `lv_obj_move_foreground(...)` churn on hunters/intercept/kill FX,
+  - pinned `deck_bar` foreground once during arena setup to stabilize z-order.
+- 2026-03-28 | Build + flash validation for bottom-deck flicker fix:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55` (success),
+  - regenerated `proj_cm55.hex` and `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2859008 bytes` / `verified 2856420 bytes`
+    - `** Resetting Target **`
+- 2026-03-28 | Restore-point promotion refresh:
+  - promoted golden: `golden-20260328-phase15-bottom-deck-flicker-fix-20260328_190411`,
+  - promoted failsafe: `failsafe-e8-drone-hunter-20260328-phase15-bottom-deck-flicker-fix-20260328_190411`,
+  - moved `current_golden` and `current_failsafe` symlinks to this validated baseline.
+
+- 2026-03-28 | Phase 15 strategic-balance + visual stabilization pass in `drone_hunter_arena.c`:
+  - added randomized opening attack archetype/target selection to prevent reboot replay patterns,
+  - added adaptive attacker strategy planner to keep attacker and defender outcomes competitively balanced,
+  - enforced stationary CIWS structure visuals while retaining depth-aware bullet stream tracking.
+- 2026-03-28 | Fire/explosion rendering pass:
+  - moved to sprite-driven city-fire profiles with intensity routing (big hits -> burst/torch, small hits -> smoke/ground),
+  - kept depth-based placement/scaling and ground anchoring,
+  - tuned profile scale/opacity/jitter variation for higher visual differentiation.
+- 2026-03-28 | Build + flash validation for this baseline:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` (success),
+  - full recovery flash succeeded (cm33_s_signed -> cm33_ns_shifted -> cm55),
+  - OpenOCD signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2859008 bytes` / `verified 2854888 bytes`
+    - `** Resetting Target **`
+
+- 2026-03-28 | Phase 15 settings-control integration completed in `drone_hunter_arena.c`:
+  - settings popup rows now tap-to-cycle for attacker mode, defender mode, NPU, difficulty, and speed++,
+  - defender HUMAN mode gating integrated,
+  - NPU toggle now gates attacker EDGEAI override path,
+  - difficulty/speed++ now affect attacker/hunter movement pacing.
+- 2026-03-28 | Build + flash validation after settings integration:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` (success),
+  - regenerated `proj_cm55.hex` and `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2412544 bytes` / `verified 2408416 bytes`
+    - `** Resetting Target **`
+- 2026-03-28 | Documentation and restore-governance refresh:
+  - produced new detailed GitHub-facing `README.md`,
+  - updated roadmap/status/state/runbook/restore docs for Phase 15 settings baseline,
+  - prepared new dated golden/failsafe restore point identifiers for this validated build.
+
+
+- 2026-03-28 | Phase 15 first-steps implementation and lower-deck bounce hardening:
+  - added shared `combat_floor_y()` boundary in `drone_hunter_arena.c`,
+  - applied floor clamp to attacker movement, hunter ground contact, respawn bounds, and render-time clamps,
+  - removed bottom icon/HUD strip rebound behavior for drones.
+- 2026-03-28 | Build + flash validation after bounce-floor hardening:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` (success),
+  - regenerated `proj_cm55.hex` and `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash (cm33_s_signed -> cm33_ns_shifted -> cm55) succeeded,
+  - OpenOCD verification signatures:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2408448 bytes` / `verified 2407304 bytes`
+    - `** Resetting Target **`
+- 2026-03-28 | Documentation refresh and restore-point promotion prep:
+  - rewrote root `README.md` with detailed GitHub-facing project overview,
+  - updated status/state/runbook/hardware/start-here docs,
+  - synchronized mirrored docs under `firmware_kit_epc2/docs`.
+
+
+- 2026-03-28 | Phase 14 completion build path repaired and validated:
+  - used `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` from `firmware_kit_epc2/proj_cm55`,
+  - rebuilt `drone_hunter_arena.c` with Phase 14 movement doctrine changes,
+  - relinked fresh `proj_cm55.elf` and regenerated `build/project_hex/proj_cm55.hex`.
+- 2026-03-28 | Phase 14 validated flash pass (full 3-image recovery sequence):
+  - board: `PSE846GPS2DBZC4A` via KitProg3,
+  - OpenOCD results:
+    - `wrote 32768 bytes` / `verified 30456 bytes`
+    - `wrote 12288 bytes` / `verified 8732 bytes`
+    - `wrote 2408448 bytes` / `verified 2407264 bytes`
+    - `** Resetting Target **`
+- 2026-03-28 | Round-end doctrine update in `drone_hunter_arena.c`:
+  - switched from strategic early-end conditions to inventory exhaustion mode,
+  - defender loss now occurs when defense inventory/layer is exhausted,
+  - defender win now occurs when attacker inventory is exhausted at/after final mission wave.
+- 2026-03-28 | CIWS doctrine tuning in `drone_hunter_arena.c`:
+  - per-gun initial ammo set to two 1,550-round magazines (`3,100` rounds per gun),
+  - per-trigger ammo burn increased to `24` (4x previous setting),
+  - effective/hard engagement envelope set to `1.5 km` / `5.0 km`.
+- 2026-03-28 | Exhaustion+CIWS doctrine flash pass:
+  - flash command succeeded on board `PSE846GPS2DBZC4A`,
+  - OpenOCD results:
+    - `wrote 2408448 bytes`
+    - `verified 2404648 bytes`
+- 2026-03-28 | Phase 13 completion calibration in `drone_hunter_arena.c`:
+  - added class-aware guidance speed/lead multipliers for launch + pursuit steering,
+  - added near-intercept overshoot damping to reduce fly-past behavior,
+  - rebalanced per-class kill-radius values post-guidance stabilization,
+  - added explicit WHY messaging for target-loss/no-reacquire and terminal-evade misses.
+- 2026-03-28 | Phase 13 completion build + flash pass:
+  - build command completed through compile/link/hex generation; expected combine-sign warning remained,
+  - flash command succeeded on board `PSE846GPS2DBZC4A`,
+  - OpenOCD results:
+    - `wrote 2408448 bytes`
+    - `verified 2405104 bytes`
+- 2026-03-28 | Roadmap/status closure for Phase 13:
+  - marked Phase 13 as complete in `docs/TODO.md`, `docs/STATUS.md`, and `docs/PROJECT_STATE.md`,
+  - updated restore metadata in `docs/RESTORE_POINTS.md` for phase13-complete baseline.
+- 2026-03-28 | Documentation + restore-point refresh after flicker hotfix:
+  - aligned latest verified flash metrics to flicker-hotfix image (`verified 2404608`),
+  - updated memory accounting in `README.md`, `docs/STATUS.md`, and `docs/PROJECT_STATE.md`,
+  - prepared new dated golden/failsafe identifiers for phase13-start + flicker baseline.
+- 2026-03-28 | Flicker mitigation hotfix in `drone_hunter_arena.c`:
+  - added HUD refresh rate limiting (`HUD_REFRESH_SEC`) to avoid full text redraw every 33 ms tick,
+  - refactored `hud_elapsed` updates to a single write per HUD refresh pass (removed multi-write per frame behavior).
+- 2026-03-28 | Flicker hotfix build + flash pass:
+  - build command completed through compile/link/hex generation; expected combine-sign warning remained,
+  - flash command succeeded on board `PSE846GPS2DBZC4A`,
+  - OpenOCD results:
+    - `wrote 2408448 bytes`
+    - `verified 2404608 bytes`
+- 2026-03-28 | Phase 13 start implementation in `drone_hunter_arena.c`:
+  - added continuous hunter guidance re-steer while committed (turn-rate limited),
+  - added swept-hit segment collision checks to reduce one-frame overshoot misses,
+  - added target-loss reacquire flow before forced miss/fall,
+  - added HUD telemetry counters for swept-hit/reacquire/overshoot (`SH`, `RQ`, `OS`).
+- 2026-03-28 | Phase 13 start build + flash pass:
+  - build command completed through compile/link/hex generation; expected combine-sign warning remained,
+  - flash command succeeded on board `PSE846GPS2DBZC4A`,
+  - OpenOCD results:
+    - `wrote 2408448 bytes`
+    - `verified 2404672 bytes`
+- 2026-03-28 | Documentation/restore synchronization for Phase 13 start:
+  - updated `README.md`, `docs/STATUS.md`, `docs/PROJECT_STATE.md`, `docs/TODO.md`, and `docs/RESTORE_POINTS.md`,
+  - mirrored documentation updates into `firmware_kit_epc2/docs/`.
+- 2026-03-28 | CIWS strategy penalty refinement:
+  - clarified that CIWS hunter-fratricide event consumes hunter supply,
+  - clarified attacker outcome uncertainty in same event (attack drone may survive or be destroyed).
+- 2026-03-28 | Restore-point doc refresh:
+  - moved dated golden/failsafe identifiers to phase12+CIWS-fratricide-rule baseline naming in `docs/RESTORE_POINTS.md`.
+- 2026-03-28 | Strategy expansion: CIWS can accidentally destroy hunter drones under constrained failure conditions:
+  - added canonical rule in `rules.md` (degraded IFF + poor lock/track merge + firing-lane overlap gate),
+  - mirrored scope in Phase 6/9 roadmap tasks (`docs/TODO.md` and `ToDo.md`).
+- 2026-03-28 | Completed Phase 12 (verification/calibration/restore governance):
+  - updated roadmap status to mark Phase 12 complete in both `docs/TODO.md` and `ToDo.md`,
+  - refreshed status/state/restore docs with latest flashed image metrics and memory accounting,
+  - prepared new golden/failsafe dated restore identifiers for this closure baseline.
+- 2026-03-28 | Phase 12 closure build + flash pass:
+  - build command reached compile/link/hex generation; expected combine-sign environment warning remained,
+  - flash command succeeded on board `PSE846GPS2DBZC4A`,
+  - OpenOCD results:
+    - `wrote 2404352 bytes`
+    - `verified 2403032 bytes`
+- 2026-03-28 | Phase 14 architecture refinement:
+  - updated doctrine so `ALGO` and `EDGEAI` are co-located on the same control core,
+  - `EDGEAI` may use U55/NPU acceleration for performance,
+  - fallback remains deterministic ALGO-only on EDGEAI/NPU failure.
+- 2026-03-28 | Docs synchronization and memory accounting pass:
+  - updated `README.md`, `docs/STATUS.md`, `docs/PROJECT_STATE.md`, and `docs/RESTORE_POINTS.md` to reflect:
+    - Phase 7/11 completion baseline,
+    - Phase 14 ALGO-vs-EDGEAI semantics,
+    - corrected SDK path usage for successful flashing,
+    - external/internal memory footprint report.
+- 2026-03-28 | Phase 14 controller semantics clarified:
+  - `ALGO` is now explicitly defined as the baseline attacker+defender function set.
+  - `EDGEAI` is now explicitly defined as an embedded intelligence layer that improves ALGO using trained/adaptive reasoning.
+- 2026-03-28 | Corrected SDK/tool path and re-ran programming:
+  - `CY_TOOLS_PATHS=/home/user/toolchains/infineon/ModusToolbox_local/opt/Tools/ModusToolbox/tools_3.7`
+  - `qprogram_proj` succeeded on board `PSE846GPS2DBZC4A`.
+  - OpenOCD results:
+    - `wrote 2404352 bytes`
+    - `verified 2400360 bytes`
+  - `build_proj` in same shell still reports missing GCC package wiring.
+- 2026-03-28 | Completed Phase 7 + Phase 11 implementation in `drone_hunter_arena.c`:
+  - Phase 7: HUD now exposes defender decision-support telemetry:
+    - endurance proxy, stock/airborne availability,
+    - CIWS lock and cooldown state,
+    - envelope fit hint and FF lockout mode.
+  - Phase 11: strategic mission-end logic re-enabled and expanded:
+    - defender win/loss conditions now evaluate asset survival, defense-layer remaining, CIWS exhaustion timing, and collateral threshold,
+    - round-end overlay now reports causal summary metrics (`W/CORE/LEAK/KILL/STOCK/CIWS`),
+    - overlay subtitle wrapping enabled for readable multi-line summaries.
+- 2026-03-28 | Added Phase 14 specification and expanded canonical movement doctrine:
+  - created Phase 14 "360 Movement Doctrine + Dynamic Intercept Decisions" in `docs/TODO.md` and `ToDo.md`,
+  - expanded `rules.md` with objective rules:
+    - attackers evade hunters but detonate only at assigned launch target coordinates,
+    - hunters retain primary lock unless opportunistic-switch gate conditions are satisfied,
+    - explicit ALGO vs EDGEAI behavior split and telemetry requirements.
+- 2026-03-28 | Completed Phase 4 + Phase 10 closure pass in `drone_hunter_arena.c`:
+  - Phase 4: added explicit no-fit/no-stock fallback logic and WHY reason reporting for fallback + launch-sector depletion,
+  - Phase 10: added mission milestones (`OPENING`, `ESCALATE`, `CRISIS`, `SATURATE`) and late-wave strategy shift layer in AUTO mode,
+  - HUD wave row now shows milestone plus dual shift markers (`*` primary, `+` late).
+- 2026-03-28 | Build attempt after Phase 4/10 closure pass:
+  - command: `make -C firmware_kit_epc2/proj_cm55 build_proj TOOLCHAIN=GCC_ARM CONFIG_DISPLAY=W4P3INCH_DISP -j8`
+  - result: failed early in current shell with `Unable to find any of the available CY_TOOLS_PATHS`.
+- 2026-03-28 | Added explicit roadmap phase for hunter guidance hardening:
+  - introduced Phase 13 "Hunter Guidance + Intercept Geometry Hardening" in both `docs/TODO.md` and `ToDo.md`,
+  - moved Phase 13 to top of immediate next sprint queue,
+  - updated `docs/STATUS.md` state line to reflect Phase 13 priority.
+- 2026-03-25 | Imported firmware baseline and established Drone Hunter app flow.
+- 2026-03-25..2026-03-26 | Iterated splash/carousel and gameplay baseline.
+- 2026-03-27 | Stabilized dual-CIWS layout, transparency, and sweep/tracer behavior.
+- 2026-03-27 | Added attack classes, Hunter vs Attacker score model, and strategic spawn/site logic.
+- 2026-03-27 | Added canonical gameplay rules spec in `rules.md`.
+- 2026-03-27 | Added persistent leak-fire system and scaled flame pressure behavior.
+- 2026-03-27 | Constrained CIWS envelope to near-front/short-range with top-grid blocking.
+- 2026-03-27 | Added rules-engine threat model pass:
+  - detect/classify/commit confidence,
+  - dynamic threat score,
+  - commit gate,
+  - recommended counter path.
+- 2026-03-27 | Implemented Phase-1 target data model completion fields:
+  - speed/altitude/range/ETA/priority/recommended-counter runtime metrics.
+- 2026-03-27 | HUD upgraded with full active-target telemetry:
+  - type, speed, altitude, range-to-core, ETA, threat score, recommended counter.
+- 2026-03-27 | Phase 2 pipeline completed:
+  - LOS commit gating added.
+  - Track-history and noise shaping added to confidence flow.
+  - Commit hold-reason counters added (detect/class/confidence/corridor/LOS).
+- 2026-03-27 | Reduced icon bar flashing by throttling deck UI refresh from CIWS fire loop.
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2371584 bytes`
+  - `verified 2369544 bytes`
+- 2026-03-27 | Promoted this exact state as golden + failsafe restore point (phase2-complete).
+- 2026-03-27 | Fixed attacker sprite runtime path to generated attack renders only (removed ODIN attacker fallback).
+- 2026-03-27 | Fixed no-defense regression:
+  - Hunter launch commit gate now has urgency fallback for high-threat/low-ETA tracks.
+  - CIWS range switched to gameplay screen-scale arc (`CIWS_RANGE_FRAC`) so guns engage reliably.
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2371584 bytes`
+  - `verified 2370160 bytes`
+- 2026-03-27 | Fixed hunter visibility/selection regression:
+  - removed forced Sting-only selection sanitizer path,
+  - switched gameplay Sting source to stable sprite,
+  - added minimum visible launch interval before intercept resolve,
+  - tightened hunter zoom + bottom clamp to prevent giant icon-bar popups.
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2371584 bytes`
+  - `verified 2370368 bytes`
+- 2026-03-27 | Completed Phase 3 threat score + prioritization engine:
+  - added weighted threat formula with target-value modifier and lane-pressure multiplier,
+  - added 16-site lane-pressure model (decay + adjacent-lane spillover),
+  - added deterministic priority ordering over active hostiles by threat score,
+  - added HUD telemetry fields for `TV` and `LP`.
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2375680 bytes`
+  - `verified 2371784 bytes`
+- 2026-03-27 | Fixed hunter top-edge skid:
+  - hunters that reach top boundary now enter horizon egress (shrink/fade/despawn),
+  - removed top blue-line sliding behavior.
+- 2026-03-27 | CIWS tracer retune pass:
+  - restored denser/larger bullet stream,
+  - constrained practical envelope to gun-to-~75% screen width behavior,
+  - tightened spread/coverage width,
+  - slowed tracers and increased persistence so stream is visible longer.
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2375680 bytes`
+  - `verified 2372912 bytes`
+- 2026-03-27 | Added 8-sector hunter launch allocation:
+  - hidden sector ring with balanced stock,
+  - nearest-target sector pick with nearest-stock fallback.
+- 2026-03-27 | CIWS ammo accounting update:
+  - ammo now decrements by burst-sized consumption per trigger event,
+  - deck ammo counter refresh cadence increased for visible decrement.
+- 2026-03-27 | Hunter miss/fall behavior update:
+  - removed lower-deck bounce/reverse behavior,
+  - falling hunters now continue off bottom of screen before reset.
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2375680 bytes`
+  - `verified 2374456 bytes`
+- 2026-03-27 | Completed Phase 5 attacker strategy layer over 16 launch sites:
+  - strategy profiles added: `AUTO`, `CENTER`, `FLANK`, `MIXED`, `TERMINAL`,
+  - edge launches remain evenly rotated,
+  - lane selection now follows live attacker strategy profile.
+- 2026-03-27 | Added attacker strategy user control:
+  - mode button long-press cycles attacker strategy and restarts round,
+  - mode button label and wave HUD row now show active strategy.
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2379776 bytes`
+  - `verified 2374944 bytes`
+- 2026-03-27 | Completed Phase 6 CIWS doctrine finalization:
+  - added lock-quality model (range + sweep-angle alignment + lateral lead difficulty),
+  - added misuse penalties (extra cooldown/reaction delay on poor lock and out-of-effective shots),
+  - scaled CIWS heat growth by lock quality.
+- 2026-03-27 | Added CIWS HUD doctrine telemetry:
+  - per-gun ammo, heat, and lock quality are now visible live.
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2379776 bytes`
+  - `verified 2375752 bytes`
+- 2026-03-27 | Completed Phase 8 wrong-choice consequence system:
+  - explicit penalties added for range/altitude mismatch, overkill allocation, CIWS misuse, and low-confidence override,
+  - HUD explainability cues added with `WHY` reason stream + failure counters.
+- 2026-03-27 | Added manual selection hooks used by consequence engine:
+  - hunter deck icon tap selection,
+  - target tap prioritization.
+- 2026-03-27 | Completed Phase 9 friendly-fire / IFF advanced mode:
+  - advanced toggle added via long-press on Phalanx deck item,
+  - blue-on-blue enabled only when combined gate is met:
+    - IFF degraded + merged tracks + manual override + low confidence,
+  - collateral and recovery telemetry added (`FF`, `COL`, recovery timer).
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2379776 bytes`
+  - `verified 2378312 bytes`
+- 2026-03-27 | Added top-right quick-access menu pill behavior:
+  - shortened pill label to `SET   |   HELP`,
+  - split-tap behavior implemented:
+    - left side opens Settings popup,
+    - right side opens Help popup.
+- 2026-03-27 | Added dedicated hunter-kill flash channel:
+  - bright white circular kill flash now renders at attacker kill point,
+  - effect decoupled from spawn FX to prevent overwrite by immediate respawn.
+- 2026-03-27 | HUD scoreboard visibility pass:
+  - explicit left/right zero-padded score labels:
+    - `HUNTER(<CTRL>): 0000`,
+    - `ATTACKER(<CTRL>): 0000`,
+  - center `CORE` label retained.
+- 2026-03-27 | Rebuild + flash validated:
+  - `wrote 2400256 bytes`
+  - `verified 2396432 bytes`
+- 2026-03-28 | Advanced Phase 10 wave pacing model in `drone_hunter_arena.c`:
+  - added rotating wave archetypes (`SHAHED`, `X-SWARM`, `MIXED`, `TERM-SAT`),
+  - added archetype-based target composition/tier scaling (difficulty by behavior, not count alone),
+  - added auto-mode mid-wave strategy shift trigger (~55% progress),
+  - added HUD archetype telemetry + strategy-shift marker.
+- 2026-03-28 | Rebuild executed (`build_proj`) after wave-archetype update:
+  - compile/link/hex generation completed,
+  - combine-sign step failed as expected in this environment (`EdgeProtect Secure Suite not found`).
+- 2026-03-28 | Flash executed (`qprogram_proj`) after wave-archetype update:
+  - `wrote 2400256 bytes`
+  - `verified 2398272 bytes`
+- 2026-03-28 | Shahed kill visual behavior fix in `drone_hunter_arena.c`:
+  - added explicit Shahed destroy sequence (explosion + short dying hold) before despawn,
+  - excluded dying targets from hunter retarget/manual selection and threat pipeline,
+  - preserved immediate behavior for non-Shahed kill path.
+- 2026-03-28 | Rebuild executed (`build_proj`) after Shahed explosion fix:
+  - compile/link/hex generation completed,
+  - combine-sign step failed as expected in this environment (`EdgeProtect Secure Suite not found`).
+- 2026-03-28 | Flash executed (`qprogram_proj`) after Shahed explosion fix:
+  - `wrote 2400256 bytes`
+  - `verified 2398944 bytes`
+- 2026-03-28 | Shahed blast visibility boost in `drone_hunter_arena.c`:
+  - increased Shahed death blast scale, brightness, border width, and hold duration,
+  - moved intercept blast foreground and enlarged kill-ring fill to improve readability at gun-impact point,
+  - tuned effect so blast is clearly larger relative to Shahed sprite size.
+- 2026-03-28 | Rebuild executed (`build_proj`) after Shahed blast visibility boost:
+  - compile/link/hex generation completed,
+  - combine-sign step failed as expected in this environment (`EdgeProtect Secure Suite not found`).
+- 2026-03-28 | Flash executed (`qprogram_proj`) after Shahed blast visibility boost:
+  - `wrote 2404352 bytes`
+  - `verified 2399336 bytes`
+- 2026-03-28 | Shahed blast center anchoring fix in `drone_hunter_arena.c`:
+  - added rendered-object center helper and anchored kill FX to live target object center,
+  - ensured intercept blast origin tracks visible Shahed center at kill time.
+- 2026-03-28 | Rebuild executed (`build_proj`) after Shahed blast center anchoring fix:
+  - compile/link/hex generation completed,
+  - combine-sign step failed as expected in this environment (`EdgeProtect Secure Suite not found`).
+- 2026-03-28 | Flash executed (`qprogram_proj`) after Shahed blast center anchoring fix:
+  - `wrote 2404352 bytes`
+  - `verified 2399496 bytes`
+- 2026-03-28 | Refined explosion anchor to transformed visual center:
+  - added helper to compute rendered object center from transformed coordinates relative to arena,
+  - kill FX now anchors from transformed sprite center instead of logical track center.
+- 2026-03-28 | Rebuild executed (`build_proj`) after transformed visual-center anchoring:
+  - compile/link/hex generation completed,
+  - combine-sign step failed as expected in this environment (`EdgeProtect Secure Suite not found`).
+- 2026-03-28 | Flash executed (`qprogram_proj`) after transformed visual-center anchoring:
+  - `wrote 2404352 bytes`
+  - `verified 2399472 bytes`
+- 2026-03-28 | CIWS kill-impact FX anchoring fix in `drone_hunter_arena.c`:
+  - CIWS kill path now captures rendered target center and emits kill/intercept FX before respawn,
+  - aligns gun-kill blast visuals with actual destroyed target location.
+- 2026-03-28 | Rebuild executed (`build_proj`) after CIWS kill-anchor parity fix:
+  - compile/link/hex generation completed,
+  - combine-sign step failed as expected in this environment (`EdgeProtect Secure Suite not found`).
+- 2026-03-28 | Flash executed (`qprogram_proj`) after CIWS kill-anchor parity fix:
+  - `wrote 2404352 bytes`
+  - `verified 2399760 bytes`
+- 2026-03-28 | Added explicit per-class blast profile mapping in `drone_hunter_arena.c`:
+  - Shahed -> giant orange explosion,
+  - Strike-X (DJI) -> medium orange explosion,
+  - red Strike-Prop fixed-wing -> small white ring.
+- 2026-03-28 | Applied mapping consistently for both hunter-kill and CIWS-kill paths with rendered-center anchoring.
+- 2026-03-28 | Rebuild executed (`build_proj`) after per-class blast mapping:
+  - compile/link/hex generation completed,
+  - combine-sign step failed as expected in this environment (`EdgeProtect Secure Suite not found`).
+- 2026-03-28 | Flash executed (`qprogram_proj`) after per-class blast mapping:
+  - `wrote 2404352 bytes`
+  - `verified 2400112 bytes`
+- 2026-03-28 | Revised class-to-blast mapping in `drone_hunter_arena.c`:
+  - red fixed-wing Strike-Prop now uses medium white circular explosion,
+  - X-wing (DJI/Strike-X) now uses small bright white circular explosion,
+  - Shahed remains giant orange explosion.
+- 2026-03-28 | Rebuild executed (`build_proj`) after revised white blast mapping:
+  - compile/link/hex generation completed,
+  - combine-sign step failed as expected in this environment (`EdgeProtect Secure Suite not found`).
+- 2026-03-28 | Flash executed (`qprogram_proj`) after revised white blast mapping:
+  - `wrote 2404352 bytes`
+  - `verified 2400160 bytes`
+- 2026-03-28 | Applied perspective depth scaling to drone explosion FX in `drone_hunter_arena.c`:
+  - intercept, spawn, and kill explosion sizes now scale by `depth_zoom_factor_for_y`,
+  - near-bottom impacts render larger; far/top impacts render smaller.
+- 2026-03-28 | Rebuild executed (`build_proj`) after depth-scaled explosion update:
+  - compile/link/hex generation completed,
+  - combine-sign step failed as expected in this environment (`EdgeProtect Secure Suite not found`).
+- 2026-03-28 | Flash executed (`qprogram_proj`) after depth-scaled explosion update:
+  - `wrote 2404352 bytes`
+  - `verified 2400360 bytes`
+- 2026-03-28 | Documentation synchronization pass:
+  - refreshed `README.md`, `docs/STATUS.md`, `docs/OPS_RUNBOOK.md`, `docs/TODO.md`, `ToDo.md`, and `docs/HARDWARE_SETUP.md` to current baseline.
+- 2026-03-28 | Restore-point docs updated:
+  - set new dated golden/failsafe target names in `docs/RESTORE_POINTS.md` for depth-scaled class-FX baseline.
+- 2026-03-28 | Docs + restore hardening release:
+  - rewrote root README for GitHub-facing project overview and verified recovery path,
+  - cleaned and condensed TODO into phase matrix + focused Phase 14/15 execution scope,
+  - refreshed STATUS/PROJECT_STATE/RESTORE docs with latest validated 3-image programming signatures,
+  - created and pushed golden tag `golden-2026-03-28-docs-release`,
+  - intentionally left failsafe tags unchanged.
+- 2026-03-28 | Documentation and GitHub README overhaul:
+  - rewrote root `README.md` with expanded project overview, architecture summary, build/flash workflows, and docs index,
+  - refreshed `STATUS.md`, `PROJECT_STATE.md`, `RESTORE_POINTS.md`, `OPS_RUNBOOK.md`, `START_HERE.md`, and `ToDo.md`,
+  - synchronized mirrored docs under `firmware_kit_epc2/docs`.
+- 2026-03-28 | Restore and flash governance refresh:
+  - validated full clean rebuild and full 3-image flash sequence,
+  - promoted new dated golden/failsafe restore point records for current baseline.
+- 2026-03-28 | New restore points created from current validated artifacts:
+  - golden: `golden-20260328-phase15-docs-refresh-20260328_174026`
+  - failsafe: `failsafe-e8-drone-hunter-20260328-phase15-docs-refresh-20260328_174026`
+- 2026-03-28 | Fire-choice palette pass rebuild + flash validation:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` (success),
+  - regenerated `proj_cm55.hex` + `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash succeeded (`erase_all; program cm33_s; program cm33_ns; program cm55`),
+  - signatures: `wrote 32768/verified 30456`, `wrote 12288/verified 8732`, `wrote 2859008/verified 2857104`.
+- 2026-03-28 | New restore points created from current validated fire-choice baseline:
+  - golden: `golden-20260328-phase15-fire-choices-20260328_180136`
+  - failsafe: `failsafe-e8-drone-hunter-20260328-phase15-fire-choices-20260328_180136`
+  - rolling links `current_golden` and `current_failsafe` updated.
+- 2026-03-28 | Explosion-class refinement patch in `drone_hunter_arena.c`:
+  - Shahed maps to largest giant orange circular blast,
+  - fixed-wing Strike-Prop maps to medium red circular blast,
+  - X-wing/FPV maps to small bright white circular blast,
+  - all blast sizes continue to scale by depth (`depth_zoom_factor_for_y`).
+- 2026-03-28 | Flame render sync hardening patch in `drone_hunter_arena.c`:
+  - city-fire animation now skips frame index `0` (empty frame in current sprite pack) to avoid rapid blink-off artifacts.
+- 2026-03-28 | Rebuild + flash validation for explosion map + flame sync fix:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` (success),
+  - regenerated `proj_cm55.hex` + `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash succeeded (`erase_all; program cm33_s; program cm33_ns; program cm55`),
+  - signatures: `wrote 32768/verified 30456`, `wrote 12288/verified 8732`, `wrote 2859008/verified 2857120`.
+- 2026-03-28 | New restore points created from flame-sync baseline:
+  - golden: `golden-20260328-phase15-flame-sync-fix-20260328_181554`
+  - failsafe: `failsafe-e8-drone-hunter-20260328-phase15-flame-sync-fix-20260328_181554`
+  - rolling links `current_golden` and `current_failsafe` updated.
+- 2026-03-28 | Top-HUD cleanup patch in `drone_hunter_arena.c`:
+  - removed top HUD text rows and removed top `SET | HELP` touch button,
+  - added HUD null guards so no label writes occur when top HUD is disabled.
+- 2026-03-28 | Stability correction after HUD removal:
+  - restored arena origin to baseline (`arena_y = HUD_H + 8`) to avoid long-run freeze regression,
+  - retained top-HUD and button removal behavior.
+- 2026-03-28 | Rebuild + flash validation for top-HUD removal + stability correction:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` (success),
+  - regenerated `proj_cm55.hex` + `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash succeeded (`erase_all; program cm33_s; program cm33_ns; program cm55`),
+  - signatures: `wrote 32768/verified 30456`, `wrote 12288/verified 8732`, `wrote 2859008/verified 2855912`.
+- 2026-03-28 | New restore points created from top-HUD-removed stability baseline:
+  - golden: `golden-20260328-phase15-tophud-removed-stability-20260328_182939`
+  - failsafe: `failsafe-e8-drone-hunter-20260328-phase15-tophud-removed-stability-20260328_182939`
+  - rolling links `current_golden` and `current_failsafe` updated.
+- 2026-03-28 | Visual-variant explosion mapping hardening in `drone_hunter_arena.c`:
+  - blast style now follows rendered attacker variant (yellow/red/orange) in both CIWS and hunter kill paths,
+  - ensures Shahed=large orange, fixed-wing=red medium, X-wing DJI=small white.
+- 2026-03-28 | Fire palette quota update in `drone_hunter_arena.c`:
+  - `city_fire_pick_profile()` now guarantees >=35% of fires are selected from:
+    - red flames with orange details,
+    - orange/white flames,
+    - bright red flames with white details.
+- 2026-03-28 | Rebuild + flash validation for explosion-map + fire-quota baseline:
+  - build: `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v` (success),
+  - regenerated `proj_cm55.hex` + `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash succeeded (`erase_all; program cm33_s; program cm33_ns; program cm55`),
+  - signatures: `wrote 32768/verified 30456`, `wrote 12288/verified 8732`, `wrote 2859008/verified 2856016`.
+- 2026-03-28 | New restore points created from explosion-map + fire-quota baseline:
+  - golden: `golden-20260328-phase15-blast-map-fire-quota-20260328_184209`
+  - failsafe: `failsafe-e8-drone-hunter-20260328-phase15-blast-map-fire-quota-20260328_184209`
+  - rolling links `current_golden` and `current_failsafe` updated.
+- 2026-03-29 | Hunter icon anti-flicker stabilization pass:
+  - in-flight hunter sprites: prevent per-frame hide/show thrash by using stable visibility alpha when inactive,
+  - bottom deck hunter icons: stabilized to fixed full opacity to avoid periodic icon flashing.
+- 2026-03-29 | Fresh rebuild/relink + full 3-image flash validation:
+  - forced recompile of `drone_hunter_arena.c`, relinked `proj_cm55.elf`, regenerated `proj_cm55.hex/bin`,
+  - full recovery flash succeeded (`erase_all; program cm33_s; program cm33_ns; program cm55`),
+  - signatures: `wrote 32768/verified 30456`, `wrote 12288/verified 8732`, `wrote 2867200/verified 2864500`.
+- 2026-03-29 | New restore points created from hunter flicker stabilization baseline:
+  - golden: `golden-20260329-phase15-hunter-flicker-stability-20260329_183309`
+  - failsafe: `failsafe-e8-drone-hunter-20260329-phase15-hunter-flicker-stability-20260329_183309`
+  - rolling links `current_golden` and `current_failsafe` updated.
+- 2026-03-30 | Audio event routing + CIWS gun pass:
+  - CIWS fire path moved to dedicated event (`DH_SOUND_CIWS_FIRE`) emitted on each burst,
+  - CIWS kill path restored to light explosion effect,
+  - CIWS fire clip regenerated with source offset >= 3 seconds.
+- 2026-03-30 | Master gain and drone audibility pass:
+  - master mixer gain increased to requested loudness target,
+  - drone background gains raised for stronger audibility under city/SFX bed,
+  - CIWS fire SFX playback constrained to short burst length for per-trigger punch.
+- 2026-03-30 | Build + flash validation for audio baseline refresh:
+  - rebuilt `proj_cm55` via `ninja -f build/APP_KIT_PSE84_EVAL_EPC2/Debug/proj_cm55.ninja -v`,
+  - regenerated `proj_cm55.hex` + `proj_cm55.bin` from rebuilt ELF,
+  - full recovery flash succeeded (`erase_all; program cm33_s; program cm33_ns; program cm55`),
+  - signatures: `wrote 32768/verified 30456`, `wrote 12288/verified 8732`, `wrote 3932160/verified 3927384`.
+- 2026-03-30 | New restore points created from audio CIWS/master-gain baseline:
+  - golden: `golden-20260330-phase15-audio-ciws-mastergain3x-20260330_082620`
+  - failsafe: `failsafe-e8-drone-hunter-20260330-phase15-audio-ciws-mastergain3x-20260330_082620`
+  - rolling links `current_golden` and `current_failsafe` updated.
